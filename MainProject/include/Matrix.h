@@ -1,23 +1,23 @@
 #pragma once
+#include <iostream>
 #include <vector>
 
 class Matrix
 {
 public:
 	Matrix();
-	Matrix(const uint32_t size, double value = 0.0);
+	explicit Matrix(const uint32_t size, double value = 0.0);
 	Matrix(const Matrix& other);
 	Matrix(Matrix&& other);
+	~Matrix();
 
 	Matrix& operator=(const Matrix& other);
 	Matrix& operator=(Matrix&& other);
 	Matrix operator*(const Matrix& rhs) const;
-
-	~Matrix();
+	friend std::ostream& operator<<(std::ostream& os, const Matrix& mat);
 
 	void SetValue(const uint32_t x, const uint32_t y, const double value);
 	void RandomizeMatrixValues(const double minValue, const double maxValue);
-	void PrintMatrix();
 
 private:
 	void AllocateMemory();
@@ -29,3 +29,5 @@ private:
 	uint32_t _col = MIN_MATRIX_N;
 	double** _data;
 };
+
+std::ostream& operator<<(std::ostream& os, const Matrix& mat);

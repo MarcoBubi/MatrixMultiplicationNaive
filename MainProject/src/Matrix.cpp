@@ -41,6 +41,11 @@ Matrix::Matrix(Matrix&& other)
 	other._data = nullptr;
 }
 
+Matrix::~Matrix()
+{
+	DealocateMemory();
+}
+
 Matrix& Matrix::operator=(const Matrix& other)
 {
 	_row = other._row;
@@ -94,11 +99,6 @@ Matrix Matrix::operator*(const Matrix& rhs) const
 	return product;
 }
 
-Matrix::~Matrix()
-{
-	DealocateMemory();
-}
-
 void Matrix::SetValue(const uint32_t x, const uint32_t y, const double value)
 {
 	assert(x < _col || y < _row);
@@ -118,19 +118,6 @@ void Matrix::RandomizeMatrixValues(const double minValue, const double maxValue)
 		{
 			_data[i][j] = dis(gen);
 		}
-	}
-}
-
-void Matrix::PrintMatrix()
-{
-	for (uint32_t i = 0; i < _row; ++i)
-	{
-		for (uint32_t j = 0; j < _col; ++j)
-		{
-			std::cout << _data[i][j] << " ";
-		}
-
-		std::cout << "\n";
 	}
 }
 
@@ -156,4 +143,19 @@ void Matrix::DealocateMemory()
 	}
 	delete[] _data;
 	_data = nullptr;
+}
+
+std::ostream& operator<<(std::ostream& os, const Matrix& mat)
+{
+	for (uint32_t i = 0; i < mat._row; ++i)
+	{
+		for (uint32_t j = 0; j < mat._col; ++j)
+		{
+			os << mat._data[i][j] << '\t';
+		}
+
+		os << '\n';
+	}
+
+	return os;
 }

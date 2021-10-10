@@ -4,16 +4,15 @@
 
 int main()
 {
-	Matrix first(4096);
-	Matrix second(4096);
-	first.RandomizeMatrixValues(-10, 10);
-	second.RandomizeMatrixValues(-10, 10);
+	Matrix matrixA(4096);
+	Matrix matrixB(4096);
+	matrixA.RandomizeMatrixValues(-10, 10);
+	matrixB.RandomizeMatrixValues(-10, 10);
 
-	auto startTimer = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	/*Multiplication!*/
-	Matrix product = first * second;
+	auto startTimer = std::chrono::high_resolution_clock::now();
+	Matrix productMatrixAB = matrixA * matrixB;
+	auto endTimer = std::chrono::high_resolution_clock::now();
 
-	auto endTimer = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-	auto elapsedTime = endTimer - startTimer;
-	std::cout << "Operation took " << elapsedTime.count() << " ms." << std::endl;
+	auto executionTime = std::chrono::duration_cast<std::chrono::seconds>(startTimer - endTimer);
+	std::cout << "Operation took " << executionTime.count() << " ms." << std::endl;
 }
