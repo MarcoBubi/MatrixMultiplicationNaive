@@ -1,50 +1,122 @@
 #pragma once
 #include "Matrix.h"
+#include <assert.h>
 #include <iostream>
-#include <cstdlib>
+#include <random>
 #include <time.h>
 #include <vector>
 
-#define MIN_MATRIX_N 4096
-
 Matrix::Matrix()
-:	_data{ _row, std::vector<double>(_col, 0) }
 {
+	AllocateMemory();
 }
 
-Matrix::Matrix(uint32_t size, double value /* = 0 */)
-:	_row{ size },
-	_col{ size },
-	_data{ _row, std::vector<double>(_col, value) }
+Matrix::Matrix(const uint32_t size, double value /* = 0 */)
+	: _row{ size }
+	, _col{ size }
 {
+	AllocateMemory();
 }
 
-Matrix::Matrix(const Matrix& obj)
-:	_row{ obj._row },
-	_col{ obj._col },
-	_data{ obj._data }
+Matrix::Matrix(const Matrix& other)
+	: _row{ other._row }
+	, _col{ other._col }
 {
-}
+	AllocateMemory();
 
-void Matrix::AddValue(uint32_t x, uint32_t y, double value)
-{
-	if(x > _col || y > _row)
+	for (int i = 0; i < _row; ++i)
 	{
-		throw ("Target index out of bound!");
+		for (int j = 0; j < _col; ++j)
+		{
+			_data[i][j] = other._data[i][j];
+		}
 	}
+}
+
+Matrix::Matrix(Matrix&& other)
+	: _row{ other._row }
+	, _col{ other._col }
+	, _data{ other._data }
+{
+	other._data = nullptr;
+}
+
+Matrix& Matrix::operator=(const Matrix& other)
+{
+	_row = other._row;
+	_col = other._col;
+
+	DealocateMemory();
+	AllocateMemory();
+
+	for (int i = 0; i < _row; ++i)
+	{
+		for (int j = 0; j < _col; ++j)
+		{
+			_data[i][j] = other._data[i][j];
+		}
+	}
+
+	return *this;
+}
+
+Matrix& Matrix::operator=(Matrix&& other)
+{
+	_row = other._row;
+	_col = other._col;
+
+	DealocateMemory();
+	_data = other._data;
+	other._data = nullptr;
+
+	return *this;
+}
+
+Matrix Matrix::operator*(const Matrix& rhs) const
+{
+	assert(_col == rhs._row);
+
+	Matrix product(_col);
+	uint32_t rhsColSize = rhs._col;
+
+	for (uint32_t i = 0; i < _row; ++i)
+	{
+		for (uint32_t j = 0; j < rhsColSize; ++j)
+		{
+			product._data[i][j] = 0;
+			for (uint32_t k = 0; k < _col; ++k)
+			{
+				product._data[i][j] += _data[i][k] * rhs._data[k][j];
+			}
+		}
+	}
+
+	return product;
+}
+
+Matrix::~Matrix()
+{
+	DealocateMemory();
+}
+
+void Matrix::SetValue(const uint32_t x, const uint32_t y, const double value)
+{
+	assert(x < _col || y < _row);
 
 	_data[x][y] = value;
 }
 
-void Matrix::RandomizeMatrixValues(double minValue, double maxValue)
+void Matrix::RandomizeMatrixValues(const double minValue, const double maxValue)
 {
-	srand(time(nullptr)); // for this purpose it will work
+	std::random_device rd; // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<> dis(minValue, maxValue);
 
 	for (uint32_t i = 0; i < _row; ++i)
 	{
 		for (uint32_t j = 0; j < _col; ++j)
 		{
-			_data[i][j] = minValue + ((double)rand() / RAND_MAX) * (maxValue - minValue);
+			_data[i][j] = dis(gen);
 		}
 	}
 }
@@ -62,37 +134,26 @@ void Matrix::PrintMatrix()
 	}
 }
 
-uint32_t Matrix::GetRowSize() const
+void Matrix::AllocateMemory()
 {
-	return _row;
+	_data = new double*[_row];
+	for (int i = 0; i < _row; ++i)
+	{
+		_data[i] = new double[_col];
+	}
 }
 
-uint32_t Matrix::GetColSize() const
+void Matrix::DealocateMemory()
 {
-	return _col;
-}
-
-Matrix Matrix::operator*(const Matrix& rhs) const
-{
-	if (_col != rhs.GetRowSize())
+	if (_data == nullptr)
 	{
-		throw "Both matrices should be square matrices!";
+		return;
 	}
 
-	Matrix product(_col);
-	uint32_t rhsColSize = rhs.GetColSize();
-
-	for (uint32_t i = 0; i < _row; ++i)
+	for (int i = 0; i < _row; ++i)
 	{
-		for (uint32_t j = 0; j < rhsColSize; ++j)
-		{
-			product._data[i][j] = 0;
-			for (uint32_t k = 0; k < _col; ++k)
-			{
-				product._data[i][j] += _data[i][k] * rhs._data[k][j];
-			}
-		}
+		delete[] _data[i];
 	}
-
-	return product;
+	delete[] _data;
+	_data = nullptr;
 }
