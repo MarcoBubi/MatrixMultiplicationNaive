@@ -1,9 +1,8 @@
-#pragma once
 #include "Matrix.h"
-#include <assert.h>
+#include <cassert>
+#include <ctime>
 #include <iostream>
 #include <random>
-#include <time.h>
 #include <vector>
 
 Matrix::Matrix()
@@ -11,11 +10,18 @@ Matrix::Matrix()
 	AllocateMemory();
 }
 
-Matrix::Matrix(const uint32_t size, double value /* = 0 */)
+Matrix::Matrix(const uint32_t size, const double value /* = 0.0 */)
 	: _row{ size }
 	, _col{ size }
 {
 	AllocateMemory();
+	for (unsigned int i = 0; i < _row; ++i)
+	{
+		for (unsigned int j = 0; j < _col; ++j)
+		{
+			_data[i][j] = value;
+		}
+	}
 }
 
 Matrix::Matrix(const Matrix& other)
@@ -24,20 +30,22 @@ Matrix::Matrix(const Matrix& other)
 {
 	AllocateMemory();
 
-	for (int i = 0; i < _row; ++i)
+	for (unsigned int i = 0; i < _row; ++i)
 	{
-		for (int j = 0; j < _col; ++j)
+		for (unsigned int j = 0; j < _col; ++j)
 		{
 			_data[i][j] = other._data[i][j];
 		}
 	}
 }
 
-Matrix::Matrix(Matrix&& other)
+Matrix::Matrix(Matrix&& other) noexcept
 	: _row{ other._row }
 	, _col{ other._col }
 	, _data{ other._data }
 {
+	other._row = MIN_MATRIX_N;
+	other._col = MIN_MATRIX_N;
 	other._data = nullptr;
 }
 
@@ -48,15 +56,19 @@ Matrix::~Matrix()
 
 Matrix& Matrix::operator=(const Matrix& other)
 {
-	_row = other._row;
-	_col = other._col;
+	if (this == &other)
+	{
+		return *this;
+	}
 
 	DealocateMemory();
+	_row = other._row;
+	_col = other._col;
 	AllocateMemory();
 
-	for (int i = 0; i < _row; ++i)
+	for (unsigned int i = 0; i < _row; ++i)
 	{
-		for (int j = 0; j < _col; ++j)
+		for (unsigned int j = 0; j < _col; ++j)
 		{
 			_data[i][j] = other._data[i][j];
 		}
@@ -65,13 +77,17 @@ Matrix& Matrix::operator=(const Matrix& other)
 	return *this;
 }
 
-Matrix& Matrix::operator=(Matrix&& other)
+Matrix& Matrix::operator=(Matrix&& other) noexcept
 {
+	DealocateMemory();
 	_row = other._row;
 	_col = other._col;
 
-	DealocateMemory();
+	AllocateMemory();
 	_data = other._data;
+
+	other._row = MIN_MATRIX_N;
+	other._col = MIN_MATRIX_N;
 	other._data = nullptr;
 
 	return *this;
@@ -99,6 +115,39 @@ Matrix Matrix::operator*(const Matrix& rhs) const
 	return product;
 }
 
+bool Matrix::operator==(const Matrix& other)
+{
+	if (_col != other._col)
+	{
+		return false;
+	}
+
+	for (uint32_t i = 0; i < _row; ++i)
+	{
+		for (uint32_t j = 0; j < _col; ++j)
+		{
+			if(_data[i][j] != other._data[i][j])
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+const uint32_t Matrix::GetSize()
+{
+	return _col;
+}
+
+const double Matrix::GetValue(const uint32_t x, const uint32_t y)
+{
+	assert(x < _col || y < _row);
+
+	return _data[x][y];
+}
+
 void Matrix::SetValue(const uint32_t x, const uint32_t y, const double value)
 {
 	assert(x < _col || y < _row);
@@ -124,7 +173,7 @@ void Matrix::RandomizeMatrixValues(const double minValue, const double maxValue)
 void Matrix::AllocateMemory()
 {
 	_data = new double*[_row];
-	for (int i = 0; i < _row; ++i)
+	for (unsigned int i = 0; i < _row; ++i)
 	{
 		_data[i] = new double[_col];
 	}
@@ -137,7 +186,7 @@ void Matrix::DealocateMemory()
 		return;
 	}
 
-	for (int i = 0; i < _row; ++i)
+	for (unsigned int i = 0; i < _row; ++i)
 	{
 		delete[] _data[i];
 	}
