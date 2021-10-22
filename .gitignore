@@ -75,3 +75,9 @@ GfxFileInfo.xml
 # format (NuGet v4 and .NET Core).
 project.lock.json
 project.assets.json
+
+
+x64
+Debug
+Release
+GTestMatrixMultiplication/x64/Debug/
